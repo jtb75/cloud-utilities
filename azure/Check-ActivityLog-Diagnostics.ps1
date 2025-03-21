@@ -8,36 +8,41 @@ $subscriptions = Get-AzSubscription
 $results = @()
 
 foreach ($sub in $subscriptions) {
-    Write-Host "Checking subscription: $($sub.Name)" -ForegroundColor Cyan
     Set-AzContext -SubscriptionId $sub.Id | Out-Null
 
     # Resource ID for Activity Log at subscription level
     $resourceId = "/subscriptions/$($sub.Id)/providers/microsoft.insights/eventtypes/management"
 
-    # Try to get diagnostic settings for Activity Log
+    # Get diagnostic settings for Activity Log
     $diagSettings = Get-AzDiagnosticSetting -ResourceId $resourceId -ErrorAction SilentlyContinue
 
     if ($diagSettings) {
         $results += [PSCustomObject]@{
-            SubscriptionName   = $sub.Name
-            SubscriptionId     = $sub.Id
-            LoggingConfigured  = "Yes"
-            DiagnosticSetting  = $diagSettings.Name
+            SubscriptionName     = $sub.Name
+            SubscriptionId       = $sub.Id
+            LoggingConfigured    = "Yes"
+            DiagnosticSetting    = $diagSettings.Name
+            EventHubNamespace    = if ($diagSettings.EventHubAuthorizationRuleId) { ($diagSettings.EventHubAuthorizationRuleId -split '/')[8] } else { "-" }
+            EventHubName         = if ($diagSettings.EventHubName) { $diagSettings.EventHubName } else { "-" }
+            EventHubAuthRule     = if ($diagSettings.EventHubAuthorizationRuleId) { ($diagSettings.EventHubAuthorizationRuleId -split '/')[10] } else { "-" }
         }
     } else {
         $results += [PSCustomObject]@{
-            SubscriptionName   = $sub.Name
-            SubscriptionId     = $sub.Id
-            LoggingConfigured  = "No"
-            DiagnosticSetting  = "-"
+            SubscriptionName     = $sub.Name
+            SubscriptionId       = $sub.Id
+            LoggingConfigured    = "No"
+            DiagnosticSetting    = "-"
+            EventHubNamespace    = "-"
+            EventHubName         = "-"
+            EventHubAuthRule     = "-"
         }
     }
 }
 
-# Output results
+# Output results to console
 $results | Format-Table -AutoSize
 
 # Optional: Export to CSV
-$results | Export-Csv -Path "./subscriptions-without-activity-logs.csv" -NoTypeInformation
+$results | Export-Csv -Path "./subscriptions-activitylog-destinations.csv" -NoTypeInformation
 
-Write-Host "Done! Results exported to subscriptions-without-activity-logs.csv" -ForegroundColor Green
+Write-Host "`nDone! Results exported to subscriptions-activitylog-destinations.csv"

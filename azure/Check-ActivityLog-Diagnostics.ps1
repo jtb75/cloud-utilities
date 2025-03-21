@@ -1,8 +1,20 @@
+param (
+    [string]$SubscriptionId,
+    [switch]$AllSubscriptions
+)
+
 # Connect to Azure
 Connect-AzAccount
 
-# Get all subscriptions your account has access to
-$subscriptions = Get-AzSubscription
+# Get targeted subscriptions based on input
+if ($AllSubscriptions) {
+    $subscriptions = Get-AzSubscription
+} elseif ($SubscriptionId) {
+    $subscriptions = Get-AzSubscription -SubscriptionId $SubscriptionId
+} else {
+    Write-Host "Please specify either -SubscriptionId <id> or -AllSubscriptions" -ForegroundColor Yellow
+    exit
+}
 
 # Create a list to hold results
 $results = @()

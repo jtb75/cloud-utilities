@@ -8,12 +8,13 @@ $subscriptions = Get-AzSubscription
 $results = @()
 
 foreach ($sub in $subscriptions) {
+    Write-Host "Checking subscription: $($sub.Name)" -ForegroundColor Cyan
     Set-AzContext -SubscriptionId $sub.Id | Out-Null
 
     # Resource ID for Activity Log at subscription level
     $resourceId = "/subscriptions/$($sub.Id)/providers/microsoft.insights/eventtypes/management"
 
-    # Get diagnostic settings for Activity Log
+    # Try to get diagnostic settings for Activity Log
     $diagSettings = Get-AzDiagnosticSetting -ResourceId $resourceId -ErrorAction SilentlyContinue
 
     if ($diagSettings) {
@@ -37,6 +38,6 @@ foreach ($sub in $subscriptions) {
 $results | Format-Table -AutoSize
 
 # Optional: Export to CSV
-$results | Export-Csv -Path "./subscriptions-activity-log-status.csv" -NoTypeInformation
+$results | Export-Csv -Path "./subscriptions-without-activity-logs.csv" -NoTypeInformation
 
-Write-Host "`nDone! Results exported to subscriptions-activity-log-status.csv"
+Write-Host "Done! Results exported to subscriptions-without-activity-logs.csv" -ForegroundColor Green

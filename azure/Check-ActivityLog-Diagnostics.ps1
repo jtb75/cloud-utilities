@@ -33,16 +33,10 @@ foreach ($sub in $subscriptions) {
     }
 }
 
-# Output results with red color for missing logging
-foreach ($result in $results) {
-    if ($result.LoggingConfigured -eq "No") {
-        Write-Host "$($result.SubscriptionName) ($($result.SubscriptionId)) - Logging: NO" -ForegroundColor Red
-    } else {
-        Write-Host "$($result.SubscriptionName) ($($result.SubscriptionId)) - Logging: YES ($($result.DiagnosticSetting))"
-    }
-}
+# Output results
+$results | Format-Table -AutoSize
 
 # Optional: Export to CSV
-$results | Export-Csv -Path "./subscriptions-without-activity-logs.csv" -NoTypeInformation
+$results | Export-Csv -Path "./subscriptions-activity-log-status.csv" -NoTypeInformation
 
-Write-Host "`nDone! Results exported to subscriptions-without-activity-logs.csv" -ForegroundColor Green
+Write-Host "`nDone! Results exported to subscriptions-activity-log-status.csv"

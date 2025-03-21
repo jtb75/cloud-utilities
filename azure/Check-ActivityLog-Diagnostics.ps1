@@ -3,8 +3,17 @@ param (
     [switch]$AllSubscriptions
 )
 
-# Connect to Azure
-Connect-AzAccount
+# Auto-detect Cloud Shell
+$runningInCloudShell = $false
+if ($env.ACC_CLOUD) {
+    $runningInCloudShell = $true
+    Write-Host "Detected Cloud Shell environment. Skipping Connect-AzAccount..." -ForegroundColor Green
+}
+
+# Only connect if not in Cloud Shell
+if (-not $runningInCloudShell) {
+    Connect-AzAccount
+}
 
 # Get targeted subscriptions based on input
 if ($AllSubscriptions) {
@@ -54,7 +63,8 @@ foreach ($sub in $subscriptions) {
 # Output results to console
 $results | Format-Table -AutoSize
 
-# Optional: Export to CSV
-$results | Export-Csv -Path "./subscriptions-activitylog-destinations.csv" -NoTypeInformation
+# Optional: Export to CSV (Cloud Shell file system or local)
+$outputPath = if ($runningInCloudShell) { "$HOME/subscriptions-activitylog-destinations.csv" } else { "./subscriptions-activitylog-destinations.csv" }
+$results | Export-Csv -Path $outputPath -NoTypeInformation
 
-Write-Host "`nDone! Results exported to subscriptions-activitylog-destinations.csv"
+Write-Host "`nDone! Results exported to $outputPath"
